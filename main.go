@@ -3,16 +3,14 @@ package main
 import (
 	"github.com/go-chi/chi/v5"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 )
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	filename := r.URL.Query().Get("filename")
 	if filename != "" {
-		file, err := os.Create("storage/" + filename)
+		file, err := Create("storage/" + filename)
 		if err != nil {
 			log.Println(err)
 			w.Write([]byte("Something went wrong"))
@@ -26,9 +24,9 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			w.Write([]byte("Something went wrong"))
 		} else {
+			log.Println("FileUploaded")
 			w.Write([]byte("Success"))
 		}
-
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("You should specify filename"))
@@ -38,17 +36,24 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 	filename := r.URL.Query().Get("filename")
 	if filename != "" {
-		file, err := ioutil.ReadFile("storage/" + filename)
+		file, err := Open("storage/" + filename)
 		if err != nil {
 			log.Println(err)
 			w.Write([]byte("Something went wrong"))
 			return
 		}
-		t := http.DetectContentType(file[:512])
+
 		headers := w.Header()
 		headers.Set("Content-Disposition", "attachment; filename="+filename)
-		headers.Set("Content-Type", t)
-		w.Write(file)
+
+		_, err = io.Copy(w, file)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		//w.Write(file)
+		log.Println("FileDownloaded")
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("You should specify filename"))
