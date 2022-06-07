@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 )
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +25,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			w.Write([]byte("Something went wrong"))
 		} else {
-			log.Println("FileUploaded")
+			log.Println("File uploaded")
 			w.Write([]byte("Success"))
 		}
 	} else {
@@ -52,8 +53,7 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//w.Write(file)
-		log.Println("FileDownloaded")
+		log.Println("File downloaded")
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("You should specify filename"))
@@ -64,6 +64,10 @@ func main() {
 	r := chi.NewRouter()
 	r.Post("/upload", UploadHandler)
 	r.Get("/download", DownloadHandler)
+
+	if err := os.MkdirAll("storage", os.ModePerm); err != nil {
+		log.Println(err)
+	}
 
 	http.ListenAndServe(":3333", r)
 }
