@@ -27,7 +27,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("FileUploaded")
 			w.Write([]byte("Success"))
 		}
-
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("You should specify filename"))
@@ -43,15 +42,16 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Something went wrong"))
 			return
 		}
+
+		headers := w.Header()
+		headers.Set("Content-Disposition", "attachment; filename="+filename)
+
 		_, err = io.Copy(w, file)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 
-		headers := w.Header()
-		headers.Set("Content-Disposition", "attachment; filename="+filename)
-		//headers.Set("Content-Type", t)
 		//w.Write(file)
 		log.Println("FileDownloaded")
 	} else {
